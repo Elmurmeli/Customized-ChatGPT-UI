@@ -8,21 +8,32 @@ function App() {
   ]);
 
 const sendMessage = async (text) => {
-  setMessages(prev => [...prev, { role: "user", content: text }]);
+  const newMessages = [...messages, { role: "user", content: text }];
+  setMessages(newMessages);
 
   try {
     const res = await fetch("http://localhost:5000/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ messages: [...messages, { role: "user", content: text }] })
+      body: JSON.stringify({ messages: newMessages }),
     });
 
     const data = await res.json();
-    const reply = data?.choices?.[0]?.message || { role: "assistant", content: "⚠️ No response from server" };
-    setMessages(prev => [...prev, reply]);
 
+    if (data?.choices?.[0]?.message) {
+      const reply = data.choices[0].message;
+      setMessages([...newMessages, reply]);
+    } else {
+      setMessages([
+        ...newMessages,
+        { role: "assistant", content: "No response from API." },
+      ]);
+    }
   } catch (err) {
-    setMessages(prev => [...prev, { role: "assistant", content: "⚠️ Error: " + err.message }]);
+    setMessages([
+      ...newMessages,
+      { role: "assistant", content: "Error: " + err.message },
+    ]);
   }
 };
 
